@@ -1,32 +1,16 @@
 .User {
   position: relative;
   background: lightblue;
-  display: inline-block;
+  display: block;
   padding: 10px;
+  margin-bottom: 10px;
   cursor: pointer;
-  margin-top: 50px;
-}
-
-.StatusList {
-  background: #eee;
-  padding: 5px;
-  margin: 5px 0;
-}
-
-button {
-  -webkit-appearance: none;
-  border: 1px solid #999;
-  background: #bbb;
-  margin-left: 10px;
-  display: inline-block;
-  vertical-align: top;
-}
-
-.Tooltip {
-  position: absolute;
-  top: -10px;
-  width: 80px;
-  background: #666;
-  color: white;
+  min-width: 80px;
+  min-height: 18px;
   text-align: center;
+}
+
+.Error {
+  font-weight: bold;
+  color: red;
 }
