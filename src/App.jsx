@@ -9,6 +9,7 @@ components. No need for classes!
 */
 
 import React from 'react';
+import { compose, withState, withHandlers } from 'recompose';
 
 const StatusList = () =>
     <div className="StatusList">
@@ -17,17 +18,26 @@ const StatusList = () =>
         <div>active</div>
     </div>
 
-const Status = ({ status }) =>
-    <span>
-        { status }
-        <StatusList />
-    </span>
+const Status = withState('listShown', 'setListVisible', false)(
+    ({ status, listShown, setListVisible }) =>
+        <span onClick={ () => setListVisible((x) => !x) }>
+            { status }
+            { listShown && <StatusList /> }
+        </span>
+);
 
-const Tooltip = ({ text, children }) =>
-    <span>
-        <div className="Tooltip">{ text }</div>
-        <span>{ children }</span>
-    </span>
+const Tooltip = withState('tooltipShown', 'setTooltipVisible', false)(
+    ({ text, children, tooltipShown, setTooltipVisible }) =>
+        <span>
+            { tooltipShown && <div className="Tooltip">{ text }</div> }
+            <span
+                onMouseEnter={() => setTooltipVisible(true) }
+                onMouseLeave={() => setTooltipVisible(false) }
+            >
+                { children }
+            </span>
+        </span>
+);
 
 const User = ({ name, status }) =>
     <div className="User">
