@@ -1,36 +1,39 @@
+/*
+TITLE:
+Add Local State to a Functional Stateless Component using Recompose
+
+DESCRIPTION:
+Learn how to use the 'withState' and 'withHandlers' higher order
+components to easily add local state to your functional stateless
+components. No need for classes!
+*/
+
 import React from 'react';
-import PropTypes from 'prop-types';
-import { compose, setDisplayName, setPropTypes } from 'recompose';
 
-const { connect } = Redux();
-
-// We don't want this
-// nesting of everything
-// const User = connect()(setPropTypes({})(setDisplayName('User')(({ name, status }) =>
-//     <div className="User">
-//         { name }: { status }
-//     </div>
-// )));
-
-// Instead compose these hoc into one
-const enhance = compose(
-    setDisplayName('User'),
-    setPropTypes({
-        name: PropTypes.string.isRequired,
-        status: PropTypes.string
-    }),
-    connect()
-);
-
-const User = enhance(({ name, status, dispatch }) =>
-    <div
-        className="User"
-        onClick={() => dispatch({ type: 'USER_SELECTED' })}>
-        { name }: { status }
+const StatusList = () =>
+    <div className="StatusList">
+        <div>pending</div>
+        <div>inactive</div>
+        <div>active</div>
     </div>
-);
 
-console.log(User.displayName);
+const Status = ({ status }) =>
+    <span>
+        { status }
+        <StatusList />
+    </span>
+
+const Tooltip = ({ text, children }) =>
+    <span>
+        <div className="Tooltip">{ text }</div>
+        <span>{ children }</span>
+    </span>
+
+const User = ({ name, status }) =>
+    <div className="User">
+        <Tooltip text="Cool Dude!">{ name }</Tooltip>—
+        <Status status={ status } />
+    </div>;
 
 const App = () =>
     <div>
@@ -38,15 +41,3 @@ const App = () =>
     </div>
 
 export default App;
-
-
-// fake implementation of redux
-function Redux() {
-    return {
-        connect: () => (BaseComponent) => (props) =>
-            <BaseComponent
-                {...props}
-                dispatch={ ({ type }) => console.log(type + ' dispatched')}
-            />
-    }
-}
