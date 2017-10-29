@@ -1,26 +1,50 @@
 /*
 TITLE:
-Add Local State to a Functional Stateless Component using Recompose
+Add Lifecycle Hooks to a Functional Stateless Component using Recompose
 
 DESCRIPTION:
-Learn how to use the 'withState' and 'withHandlers' higher order
-components to easily add local state to your functional stateless
-components. No need for classes!
+Learn how to use the 'lifecycle' higher-order component
+to conveniently use hooks without using a class component.
 */
 
 import React from 'react';
+import { lifecycle } from 'recompose';
 
-const User = ({ name, status, showStatus, canDeleteUsers }) =>
+const configPromise = fetchConfiguration();
+
+const withConfig = lifecycle({
+    state: { config: {} },
+    componentDidMount() {
+        configPromise.then(config =>
+            this.setState({ config }));
+    }
+});
+
+const User = withConfig(({ name, status, config }) =>
     <div className="User">
         { name }
-        { showStatus && '—' + status }
-        { canDeleteUsers && <button>X</button> }
-    </div>;
+        { config.showStatus && '—' + status }
+        { config.canDeleteUsers && <button>X</button> }
+    </div>
+);
 
 const App = () =>
     <div>
-        <User name="AJRedDevil" status="active"
-            showStatus={ true } canDeleteUsers={ true }/>
+        <User name="AJRedDevil" status="active" />
     </div>
 
 export default App;
+
+
+// Mock Configuration
+
+const config = {
+    showStatus: true,
+    canDeleteUsers: true
+};
+
+function fetchConfiguration() {
+    return new Promise((resolve) => {
+        setTimeout(() => resolve(config), 300);
+    });
+}
