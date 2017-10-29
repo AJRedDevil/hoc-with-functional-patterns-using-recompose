@@ -9,14 +9,25 @@ components. No need for classes!
 */
 
 import React from 'react';
-import { compose, withState, withHandlers } from 'recompose';
+import { compose, withReducer, withHandlers } from 'recompose';
 
 const withToggle = compose(
-    withState('toggledOn', 'toggle', false),
+    withReducer('toggledOn', 'dispatch', (state, action) => {
+        switch(action.type) {
+            case 'SHOW':
+                return true;
+            case 'HIDE':
+                return false;
+            case 'TOGGLE':
+                return !state;
+            default:
+                return state;
+        }
+    }, false),
     withHandlers({
-        show: ({ toggle }) => (e) => toggle(true),
-        hide: ({ toggle }) => (e) => toggle(false),
-        toggle: ({ toggle }) => (e) => toggle((current) => !current)
+        show: ({ dispatch }) => (e) => dispatch({ type: 'SHOW' }),
+        hide: ({ dispatch }) => (e) => dispatch({ type: 'HIDE' }),
+        toggle: ({ dispatch }) => (e) => dispatch({ type: 'TOGGLE' })
     })
 );
 
