@@ -8,16 +8,22 @@ unable to be overridden.
 */
 
 import React from 'react';
+import { withProps } from 'recompose';
+
+const HomeLink = withProps(({ query }) => ({ href: '#/?query=' + query }))('a');
+// const HomeLink = (props) => <a href='#/'>{ props.children }</a>
+const ProductsLink = withProps({ href: '#/products' })('a');
+const CheckoutLink = withProps({ href: '#checkout' })('a');
 
 const App = () =>
     <div className="App">
         <header>
-            <a href='#/'>Logo</a>
+            <HomeLink query="logo">Logo</HomeLink>
         </header>
         <nav>
-            <a href='#/'>Home</a>
-            <a href='#/products'>Products</a>
-            <a href='#/checkout'>Checkout</a>
+            <HomeLink>Home</HomeLink>
+            <ProductsLink>Products</ProductsLink>
+            <CheckoutLink>Checkout</CheckoutLink>
         </nav>
     </div>;
 
