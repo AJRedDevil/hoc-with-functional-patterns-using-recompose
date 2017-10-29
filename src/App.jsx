@@ -12,16 +12,21 @@ need to show it.
 */
 
 import React from 'react';
+import { compose, branch, renderNothing } from 'recompose';
 
 const User = ({ name, status}) =>
     <div className="User"> { name }-{ status } </div>;
 
-const FeaturedUser = ({ name, status }) =>
+const userIsNotActive = ({ status }) => status !== 'active';
+const hideIfNotActive = branch(userIsNotActive, renderNothing);
+
+const FeaturedUser = hideIfNotActive(({ name, status }) =>
     <div>
         <h3>Today's Featured User</h3>
         <User name={ name } status={ status } />
         <hr />
-    </div>;
+    </div>
+);
 
 const UserList = ({ users }) =>
     <div className="UserList">
