@@ -1,103 +1,70 @@
 /*
 TITLE:
-Optimize Component Rendering using Recompose
+Learn How Recompose Optimizes Higher Order Components
 
 DESCRIPTION:
-Learn how and when to use the ‘pure’, ‘onlyUpdateForKeys’,
-‘onlyUpdateForPropTypes’, and ‘shouldUpdate’ higher order components.
-Each one provides a certain granularity of control over prevent
-unnecessary renders. Learn how they build upon each other to provide
-different options.
+Learn about optimizations that Recompose uses behind the scenes.
 */
-
 import React from 'react';
-import PropTypes from 'prop-types';
-import { compose, withState, withHandlers, pure, onlyUpdateForKeys,
-            setPropTypes, onlyUpdateForPropTypes, shouldUpdate } from 'recompose';
 
-const optimize = compose(
-    // #1
-    // pure,
+window.process = {
+    env: {
+        NODE_ENV: 'development'
+    }
+};
 
-    // #2
-    // onlyUpdateForKeys(['data', 'width', 'onChange']),
+const overrideProps = (overrideProps) => (BaseComponent) => {
+    const factory = createEagerFactory(BaseComponent);
 
-    // #3
-    // onlyUpdateForPropTypes,
-    // setPropTypes({
-    //     data: PropTypes.string,
-    //     width: PropTypes.number,
-    //     onChange: PropTypes.func
-    // }),
-    
-    // #4
-    shouldUpdate((prev, next) =>
-        prev.data !== next.data ||
-        prev.width !== next.width ||
-        prev.onChange !== next.onChange
-    ),
-    
-    withHandlers({
-        onChange: ({ id, onChange }) => (e) => onChange(id, e.target.value)
-    })
-);
+    return (props) => factory(
+        { ...props, ...overrideProps },
+        props.children
+    );
+}
 
-const Cell = optimize(({ data, onChange, width}) =>
-    <div
-        className='Cell'
-        style={{
-            width: `${width}%`,
-            borderColor: randomColor()
-        }}
-    >
-        <textarea type="text" value={ data } onChange={ onChange } />
-    </div>
-);
+const User = ({name}) =>
+    <div className="User">{name}</div>;
 
-const Spreadsheet = ({ rows, cols, cellsData, onCellChange }) =>
-    <div className="Spreadsheet">
-        { range(rows)
-            .map((row, i) =>
-            range(cols)
-                .map((col, j) => `${i}-${j}`)
-                .map(id =>
-                <Cell
-                    key={ id }
-                    id={ id }
-                    data={ cellsData[id] || '' }
-                    onChange={
-                        onCellChange
-                    }
-                    width={ 100/cols }
-                />)) }
-    </div>;
+const alwaysBob = overrideProps({name: 'Bob'});
+const User2 = alwaysBob(User);
 
-const enhance = compose(
-    withState('cellsData', 'setCells', {}),
-    withHandlers({
-        setCellState: ({ cellsData, setCells }) => (id, val) =>
-            setCells({
-                ...cellsData,
-                [id]: val
-            })
-    })
-);
-
-const App = enhance(({ cellsData, setCellState }) =>
-    <div className='App'>
-        <Spreadsheet
-            {...{ rows: 3, cols: 3, cellsData, onCellChange: setCellState }}
-        />
-    </div>
-);
+const App = () => <div>
+    <User name="Joe"/>
+    <User2 name="Steve"/>
+</div>;
 
 export default App;
 
+// HOC Optimizations
 
-function range(num) {
-    return Array.from(Array(num).keys())
+function createEagerFactory(Component) {
+    return (props, children) => {
+        if (isReferentiallyTransparentFunctionComponent(Component)) {
+            return children
+                ? Component({ ...props, children })
+                : Component(props);
+        }
+
+        return children
+            ? <Component {...props}>{ children }</Component>
+            : <Component {...props} />
+    }
 }
 
-function randomColor() {
-    return '#'+Math.floor(Math.random()*16777215).toString(16);
+function isReferentiallyTransparentFunctionComponent(Component) {
+    return Boolean(
+        typeof Component === 'function' &&
+        !isClassComponent(Component) &&
+        !Component.defaultProps &&
+        !Component.contextTypes &&
+        (window.process.env.NODE_ENV === 'production' || !Component.propTypes)
+    );
+}
+
+function isClassComponent(Component) {
+    return Boolean(
+        Component &&
+        Component.prototype &&
+        typeof Component.prototype.isReactComponent === 'object'
+    );
 }
