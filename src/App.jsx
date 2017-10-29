@@ -1,26 +1,28 @@
 /*
 TITLE:
-Flatten a Prop using Recompose
+Show a Spinner While a Component is Loading using Recompose
 
 DESCRIPTION:
-Learn how to use the ‘flattenProp’ higher order component to take a
-single object prop and spread each of its fields out as a prop.
+Learn how to use the 'branch' and 'renderComponent'
+higher-order components to show a spinner while a
+component loads.
 */
 import React from 'react';
-import { compose, withProps, flattenProp } from 'recompose';
+import { lifecycle } from 'recompose';
 
-const { connect } = ReactRedux();
+const withUserData = lifecycle({
+    componentDidMount() {
+        fetchData().then((data) =>
+            this.setState(data));
+    }
+});
 
-const mapStateToProps = (state) => ({ user: state.user });
-
-const enhance = compose(
-    connect(mapStateToProps),
-    flattenProp('user')
-);
-
-
-const User = enhance(({ name, status }) =>
-    <div className="User"> { name } - { status } </div>
+const User = withUserData(({ name, status}) =>
+    !name || !status ?
+        <div className="Spinner">
+            <div className="loader">Loading...</div>
+        </div> :
+    <div className="User"> { name }-{ status } </div>
 );
 
 const App = () =>
@@ -31,13 +33,8 @@ const App = () =>
 export default App;
 
 
-// Mock Implemenation of ReactRedux connect
-function ReactRedux() {
-    const state = {
-        user: { name: 'Tim', status: 'active' }
-    };
-
-    return {
-        connect: (map) => withProps(map(state))
-    }
+function fetchData() {
+    return new Promise((resolve) => {
+        setTimeout(() => resolve({ name: "Tim", status: "active" }), 1500);
+    });
 }
