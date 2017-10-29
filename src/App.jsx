@@ -1,33 +1,74 @@
 /*
 TITLE:
-Set the HTML Tag of a Component via a Prop using Recompose
+Compute Expensive Props Lazily using Recompose
 
 DESCRIPTION:
-Learn how to user the ‘componentFromProp’ helper and ‘defaultProps’
-higher order component to swap the underlying html tag of your
-component. Sometimes we want a component to behave the same overall
-but to use a different element in the HTML output. An example is
-swapping an <a> for a <button> or even a react router <Link>
-depending on circumstance.
+Learn how to use the 'withPropsOnChange' higher order component to help
+ensure that expensive prop computations are only executed when necessary.
+Simply specify which props are “expensive” and provide a factory function
+for those props.
 */
 
 import React from 'react';
-import { compose, componentFromProp, withProps } from 'recompose';
+import { compose, withState, withPropsOnChange } from 'recompose';
 
-const Link = compose(
-    withProps(({ type='a', to='#' }) =>
-        type === 'a'
-            ? { type, href: to }
-            : { type, onClick(e) { window.location=to }}
-    )
-)(componentFromProp('type'));
+const lazyResult = withPropsOnChange(
+    ['depth'],
+    ({ depth }) => ({
+        result: fibonacci(depth)
+    })
+);
 
-const App = () =>
-    <div className="App">
-        <a href='#/page1'>Anchor Link</a>
-        <button onClick={ window.location='#/page2' }>Button Link</button>
-        <Link to='#/page1'>Anchor Link</Link>
-        <Link type='button' to='#/page2'>Button Link</Link>
+const Fibonacci = lazyResult(({ result, color, size, count}) =>
+    <div style={{ color, fontSize: size }}>
+        Fibonacci Result:<br/>{ result }
     </div>
+);
+
+const withAppState = compose(
+    withState('depth', 'setDepth', 1400),
+    withState('color', 'setColor', 'red'),
+    withState('size', 'setSize', 14)
+);
+
+const App = withAppState(({ depth, color, size, setDepth, setColor, setSize }) =>
+    <div className="App">
+        <Fibonacci { ...{ depth, color, size} } />
+        <br/>
+        <div>
+            <span>Depth: { depth } </span>
+            <button onClick={ () => setDepth(x => x + 1) }>+</button>
+            <button onClick={ () => setDepth(x => x - 1) }>-</button>
+        </div>
+        <div>
+            <span>Size: { size } </span>
+            <button onClick={ () => setSize(x => x + 1) }>+</button>
+            <button onClick={ () => setSize(x => x - 1) }>-</button>
+        </div>
+        <div>
+            <span>Color: </span>
+            <button onClick={ () => setColor('blue') }>blue</button>
+            <button onClick={ () => setColor('green') }>green</button>
+            <button onClick={ () => setColor('red') }>red</button>
+        </div>
+        <br/>
+    </div>
+);
 
 export default App;
+
+
+let count = 1;
+
+function fibonacci(num, memo) {
+    if (!memo) {
+        document.getElementById('log').textContent = `Computed: ${++count || 1}`;
+    }
+
+    memo = memo || {};
+
+    if (memo[num]) return memo[num];
+    if (num <= 1) return 1;
+
+    return memo[num] = fibonacci(num - 1, memo) + fibonacci(num - 2, memo);
+}
