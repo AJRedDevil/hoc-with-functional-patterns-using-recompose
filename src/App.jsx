@@ -12,7 +12,7 @@ custom higher-order components.
 */
 
 import React from 'react';
-import { lifecycle } from 'recompose';
+import { compose, lifecycle, branch, renderComponent } from 'recompose';
 
 const User = ({ name, status}) =>
     <div className="User"> { name }-{ status } </div>;
@@ -40,9 +40,23 @@ const AuthError = ({ error }) =>
 const NoUsersMessage = () =>
     <div>There are no users to display</div>;
 
-const UserList = withUserData(({ users, error }) =>
-    error && error.statusCode && <AuthError error={ error } /> ||
-    users && users.length === 0 && <NoUsersMessage /> ||
+const hasErrorCode = ({ error }) => error && error.statusCode;
+const hasNoUsers = ({ users }) => users && users.length === 0;
+
+const nonOptimalStates = (states) =>
+    compose(...states.map(state =>
+        branch(state.when, renderComponent(state.render))
+    ));
+
+const enhance = compose(
+    withUserData,
+    nonOptimalStates([
+        { when: hasErrorCode, render: AuthError },
+        { when: hasNoUsers, render: NoUsersMessage }
+    ])
+);
+
+const UserList = enhance(({ users }) =>
     <div className="UserList">
         { users && users.map((user) => <User {...user} />) }
     </div>
@@ -69,8 +83,8 @@ function fetchData() {
         setTimeout(() => {
             // reject({ statusCode: UNAUTHENTICATED });
             // reject({ statusCode: UNAUTHORIZED })
-            // resolve(noUsers);
-            resolve(users);
+            resolve(noUsers);
+            // resolve(users);
         }, 100);
     });
 }
