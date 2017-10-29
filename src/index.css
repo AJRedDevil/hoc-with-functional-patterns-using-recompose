@@ -1,20 +1,21 @@
 .App {
-  margin-top: 50px;
+  font-size: 9px;
+  font-family: Rockwell, “Courier Bold”, Courier, Georgia, Times, “Times New Roman”, serif;
 }
 
-.User {
-  position: relative;
-  background: lightblue;
-  display: block;
-  padding: 10px;
-  margin-bottom: 10px;
-  cursor: pointer;
-  min-width: 80px;
-  min-height: 18px;
-  text-align: center;
+.Cell {
+  display: inline-block;
+  border: 2px solid;
+  box-sizing: border-box;
+  height: 40px
 }
 
-.Error {
-  font-weight: bold;
-  color: red;
+.Cell textarea {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  outline: none;
+  border: none;
+  resize: none;
+  font-size: 10px;
 }
