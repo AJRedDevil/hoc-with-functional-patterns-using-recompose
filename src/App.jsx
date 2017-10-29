@@ -11,9 +11,38 @@ different options.
 */
 
 import React from 'react';
-import { compose, withState, withHandlers } from 'recompose';
+import PropTypes from 'prop-types';
+import { compose, withState, withHandlers, pure, onlyUpdateForKeys,
+            setPropTypes, onlyUpdateForPropTypes, shouldUpdate } from 'recompose';
 
-const Cell = ({ data, onChange, width}) =>
+const optimize = compose(
+    // #1
+    // pure,
+
+    // #2
+    // onlyUpdateForKeys(['data', 'width', 'onChange']),
+
+    // #3
+    // onlyUpdateForPropTypes,
+    // setPropTypes({
+    //     data: PropTypes.string,
+    //     width: PropTypes.number,
+    //     onChange: PropTypes.func
+    // }),
+    
+    // #4
+    shouldUpdate((prev, next) =>
+        prev.data !== next.data ||
+        prev.width !== next.width ||
+        prev.onChange !== next.onChange
+    ),
+    
+    withHandlers({
+        onChange: ({ id, onChange }) => (e) => onChange(id, e.target.value)
+    })
+);
+
+const Cell = optimize(({ data, onChange, width}) =>
     <div
         className='Cell'
         style={{
@@ -22,7 +51,8 @@ const Cell = ({ data, onChange, width}) =>
         }}
     >
         <textarea type="text" value={ data } onChange={ onChange } />
-    </div>;
+    </div>
+);
 
 const Spreadsheet = ({ rows, cols, cellsData, onCellChange }) =>
     <div className="Spreadsheet">
@@ -36,7 +66,7 @@ const Spreadsheet = ({ rows, cols, cellsData, onCellChange }) =>
                     id={ id }
                     data={ cellsData[id] || '' }
                     onChange={
-                        (e) => onCellChange(id, e.target.value)
+                        onCellChange
                     }
                     width={ 100/cols }
                 />)) }
