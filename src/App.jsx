@@ -1,32 +1,15 @@
 import React, { Component } from 'react';
+import { setDisplayName, setPropTypes } from 'recompose';
+import { connect } from 'redux';
 
-const overrideProps = (overrideProps) => (BaseComponent) => (props) =>
-    <BaseComponent {...props} {...overrideProps} />;
-
-const alwaysBob = overrideProps({ name: 'Bob' });
-
-const neverRender = (BaseComponent) =>
-    class extends Component {
-        shouldComponentUpdate() {
-            return false;
-        }
-
-        render() {
-            return <BaseComponent {...this.props} />;
-        }
-    }
-
-const User = ({ name }) =>
-    <div className="User">{ name }</div>
-
-const User2 = alwaysBob(User);
-const User3 = neverRender(User);
+const User = ({ name, status }) =>
+    <div className="User">
+        { name }: { status }
+    </div>
 
 const App = () =>
     <div>
-        <User name="AJRedDevil" />
-        <User2 name="AJAzzurri" />
-        <User3 name="Steve" />
+        <User name="AJRedDevil" status="active"/>
     </div>
 
 export default App;
