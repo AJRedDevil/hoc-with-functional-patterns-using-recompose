@@ -1,54 +1,76 @@
 /*
 TITLE:
-Show a Spinner While a Component is Loading using Recompose
+Replace a Component with Non-Optimal States using Recompose
 
 DESCRIPTION:
-Learn how to use the 'branch' and 'renderComponent'
-higher-order components to show a spinner while a
-component loads.
+Learn how to use the ‘branch’ and ‘renderComponent’
+higher-order components to show errors or messaging when
+your component is in a non-optimal state. Avoid putting
+extraneous logic to show errors or messaging into your
+core component by organizing your non-optimal states into
+custom higher-order components.
 */
+
 import React from 'react';
-import { compose, lifecycle, branch, renderComponent } from 'recompose';
+import { lifecycle } from 'recompose';
+
+const User = ({ name, status}) =>
+    <div className="User"> { name }-{ status } </div>;
 
 const withUserData = lifecycle({
-    state: { loading: true },
     componentDidMount() {
-        fetchData().then((data) =>
-            this.setState({ loading: false, ...data }));
+        fetchData().then(
+            (users) => this.setState({ users }),
+            (error) => this.setState({ error })
+        );
     }
 });
 
-const Spinner = () =>
-    <div className="Spinner">
-        <div className="loader">Loading...</div>
-    </div>;
+const UNAUTHENTICATED = 401;
+const UNAUTHORIZED = 403;
+const errorMsgs = {
+    [UNAUTHENTICATED]: 'Not Authenticated!',
+    [UNAUTHORIZED]: 'Not Authorized!',
+};
 
-const isLoading = ({ loading }) => loading;
+const AuthError = ({ error }) =>
+    error.statusCode &&
+        <div className="Error">{ errorMsgs[error.statusCode] }</div>;
 
-const withSpinnerWhileLoading = branch(
-    isLoading,
-    renderComponent(Spinner)
-);
+const NoUsersMessage = () =>
+    <div>There are no users to display</div>;
 
-const enhance = compose(
-    withUserData,
-    withSpinnerWhileLoading
-);
-
-const User = enhance(({ name, status}) =>
-    <div className="User"> { name }-{ status } </div>
+const UserList = withUserData(({ users, error }) =>
+    error && error.statusCode && <AuthError error={ error } /> ||
+    users && users.length === 0 && <NoUsersMessage /> ||
+    <div className="UserList">
+        { users && users.map((user) => <User {...user} />) }
+    </div>
 );
 
 const App = () =>
     <div>
-        <User />
+        <UserList />
     </div>;
 
 export default App;
 
 
+// Mock Service
+const noUsers = [];
+const users = [
+    { name: "Tim", status: "active" },
+    { name: "Bob", status: "active" },
+    { name: "Joe", status: "inactive" },
+    { name: "Jim", status: "pending" },
+];
 function fetchData() {
-    return new Promise((resolve) => {
-        setTimeout(() => resolve({ name: "Tim", status: "active" }), 1500);
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            // reject({ statusCode: UNAUTHENTICATED });
+            // reject({ statusCode: UNAUTHORIZED })
+            // resolve(noUsers);
+            resolve(users);
+        }, 100);
     });
 }
